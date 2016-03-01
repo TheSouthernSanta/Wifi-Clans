@@ -119,7 +119,7 @@ if(Modem1distance<(ModemRanges[1,number]/6)*2 & Modem1distance>0){
     EGP:egpColor(21,vec4(0,255,0,255))
 }
 }else{EGP:egpText(2,"No Networks were found right now.",vec2((Width/4)*3,(Height/4)+20))
-EGP:egpAlpha(22,0)}
+EGP:egpAlpha(21,0)}
 
 if(Modems[2,entity]!=noentity() & Modem2distance>=0){
 EGP:egpText(3,Modem2Name+"   "+Modem2distance,vec2((Width/4)*3,(Height/4)+40))
