@@ -1,0 +1,364 @@
+@name Wifi Clans Device
+@inputs EGP:wirelink
+@outputs UnsortedPoints:array UnsortedModems:array LeaderboardModems:array LeaderboardPoints:array ModemScan:array TempModems:array UnsortedLeaderboardModems:array UnsortedLeaderboardPoints:array ModemRanges:array TempModemRanges:array
+@persist Modems:array Width Height [ConnectedModemdistance Modem1distance Modem2distance Modem3distance Modem4distance Modem5distance]:number Chat:string Connected SSID:string ConnectedModem:entity CodeSequence ModemHack HackPercentage HackID:string Points ClanPoints UnsortedPoints:array LeaderboardModems:array LeaderboardPoints:array ModemScan:array ConnectedRange
+@trigger 
+
+if(first() | duped()){
+    CodeSequence = 0
+    ModemHack = 0
+    Points = 0
+    dsJoinGroup("WifiCModemToDevice")
+    dsSetScope(2)
+    runOnTick(1)
+    runOnChat(1)
+    Width = egpScrW(owner())
+    Height = egpScrH(owner())
+    hint("Wifi Clans Modem",5000)
+    hint("This was yet another big fun project!",5000)
+    hint("type !wifihelp for commands ingame about this minigame",5000)
+    hint("Made by TheSouthernSanta",5000)
+    print("Wifi Clans Modem")
+    print("This was yet another big fun project!")
+    print("type !wifihelp for commands ingame about this minigame")
+    print("Made by TheSouthernSanta")
+    timer("Scan",500)
+    timer("SortLoop",500)
+    timer("LeaderboardLoop",500)
+    timer("PointsSync",500)
+}
+
+if(changed(EGP)){
+    Width = egpScrW(owner())
+    Height = egpScrH(owner())
+}
+
+Chat = owner():lastSaid():lower():explode(" "):string(1)
+EGP:egpText(12,"Points: "+Points:toString(),vec2((Width/4)*3-150,(Height/4)+80))
+
+if(clk("Scan")){
+    ModemScan=dsProbe("WifiCModems")
+    TempModems=dsProbe("WifiCModems")
+    timer("Scan",5000)
+}
+if(clk("SortLoop")){
+for(I=1,ModemScan:count()){
+    dsSendDirect("ModemRanges",ModemScan[I,entity],"")
+}
+for(I=1,TempModems:count()){
+    if(TempModems[I,entity]==ConnectedModem){
+        TempModems:remove(I)
+        TempModemRanges:remove(I)
+    }
+    if(TempModems[I,entity]:pos():distance(owner():pos())>TempModems[I+1,entity]:pos():distance(owner():pos())){
+        TempModems:pushEntity(TempModems[I,entity])
+        TempModems:remove(I)
+        TempModemRanges:pushNumber(TempModemRanges[I,number])
+        TempModemRanges:remove(I)
+    }
+    Modems = TempModems
+    ModemRanges = TempModemRanges
+}
+timer("SortLoop",100)
+}
+
+if(dsClk("ModemRange")){
+    for(I=1,Modems:count()){
+        TempModemRanges[ModemRanges:count()+1,number]=dsGetNumber()
+    }
+}
+
+if(Connected==0 | ModemHack){
+    EGP:egpText(9,"Godmode Disabled",vec2((Width/4)*3-150,(Height/4)+40))
+    EGP:egpText(10,"Noclip Disabled",vec2((Width/4)*3-150,(Height/4)+60))
+    owner():plyGod(0)
+    owner():plyNoclip(0)
+}else{
+    EGP:egpText(9,"",vec2((Width/4)*3-150,(Height/4)+40))
+    EGP:egpText(10,"",vec2((Width/4)*3-150,(Height/4)+60))
+}
+
+if(dsClk("ClanPoints")){
+    ClanPoints = dsGetNumber()
+}
+
+if(Connected){
+    ConnectedModemdistance = ConnectedRange - ConnectedModem:pos():distance(owner():pos())
+    EGP:egpText(13,"Clan Points: "+ClanPoints:toString(),vec2((Width/4)*3-150,(Height/4)+100))
+    EGP:egpText(15,"Clan Leaderboard",vec2((Width/4)*3,Height/4+120))
+    EGP:egpText(16,LeaderboardModems[1,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)+" "+LeaderboardPoints[1,number]:toString()+" Points",vec2((Width/4)*3,Height/4+140))
+    EGP:egpText(17,LeaderboardModems[2,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)+" "+LeaderboardPoints[2,number]:toString()+" Points",vec2((Width/4)*3,Height/4+160))
+    EGP:egpText(18,LeaderboardModems[3,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)+" "+LeaderboardPoints[3,number]:toString()+" Points",vec2((Width/4)*3,Height/4+180))
+}else{
+EGP:egpText(13,"",vec2((Width/4)*3-150,(Height/4)+100))
+EGP:egpText(15,"",vec2((Width/4)*3,Height/4+120))
+EGP:egpText(16,"",vec2((Width/4)*3,Height/4+140))
+EGP:egpText(17,"",vec2((Width/4)*3,Height/4+160))
+EGP:egpText(18,"",vec2((Width/4)*3,Height/4+180))
+}
+
+Modem1distance = ModemRanges[1,number] - Modems[1,entity]:pos():distance(owner():pos())
+Modem2distance = ModemRanges[2,number] - Modems[2,entity]:pos():distance(owner():pos())
+Modem3distance = ModemRanges[3,number] - Modems[3,entity]:pos():distance(owner():pos())
+Modem4distance = ModemRanges[4,number] - Modems[4,entity]:pos():distance(owner():pos())
+Modem5distance = ModemRanges[5,number] - Modems[5,entity]:pos():distance(owner():pos())
+
+Modem1Name = Modems[1,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)
+Modem2Name = Modems[2,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)
+Modem3Name = Modems[3,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)
+Modem4Name = Modems[4,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)
+Modem5Name = Modems[5,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)
+
+EGP:egpText(1,"Networks Available",vec2((Width/4)*3,Height/4))
+EGP:egpText(14,"Device Owner: "+owner():name(),vec2((Width/4)*3,Height/4-100))
+
+if(Modems[1,entity]!=noentity() & Modem1distance>=0){
+EGP:egpText(2,Modem1Name,vec2((Width/4)*3,(Height/4)+20))
+if(Modem1distance<(ModemRanges[1,number]/6)*2 & Modem1distance>0){
+    EGP:egpCircle(21,vec2((Width/4)*3,(Height/4)+20),vec2(20,20))
+    EGP:egpColor(21,vec4(0,255,0,255))
+}
+}else{EGP:egpText(2,"No Networks were found right now.",vec2((Width/4)*3,(Height/4)+20))
+EGP:egpAlpha(22,0)}
+
+if(Modems[2,entity]!=noentity() & Modem2distance>=0){
+EGP:egpText(3,Modem2Name+"   "+Modem2distance,vec2((Width/4)*3,(Height/4)+40))
+}else{EGP:egpText(3,"",vec2((Width/4)*3,(Height/4)+40))}
+
+if(Modems[3,entity]!=noentity() & Modem3distance>=0){
+EGP:egpText(4,Modem3Name+"   "+Modem3distance,vec2((Width/4)*3,(Height/4)+60))
+}else{EGP:egpText(4,"",vec2((Width/4)*3,(Height/4)+60))}
+
+if(Modems[4,entity]!=noentity() & Modem4distance>=0){
+EGP:egpText(5,Modem4Name+"   "+Modem4distance,vec2((Width/4)*3,(Height/4)+80))
+}else{EGP:egpText(5,"",vec2((Width/4)*3,(Height/4)+80))}
+
+if(Modems[5,entity]!=noentity() & Modem5distance>=0){
+EGP:egpText(6,Modem5Name+"   "+Modem5distance,vec2((Width/4)*3,(Height/4)+100))
+}else{EGP:egpText(6,"",vec2((Width/4)*3,(Height/4)+100))}
+
+if(Connected){
+EGP:egpText(7,"Connected",vec2((Width/4)*3,(Height/4)-60))
+EGP:egpText(8,SSID+"   "+ConnectedModemdistance,vec2((Width/4)*3,(Height/4)-40))
+}else{
+EGP:egpText(7,"",vec2((Width/4)*3,(Height/4)-60))
+EGP:egpText(8,"",vec2((Width/4)*3,(Height/4)-40))
+}
+
+
+if(chatClk(owner()) & Chat:lower()=="!connect" & ModemHack==0){
+    hideChat(1)
+    print(_HUD_PRINTTALK,"[Hidden] "+owner():lastSaid())
+    for(I=1,Modems:count()){
+        if(owner():lastSaid():explode(Chat+" "):string(2)==Modems[I,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1) & Modems[I,entity]:pos():distance(owner():pos())<=2000){
+            ConnectedModem = Modems[I,entity]
+            ConnectedRange = ModemRanges[I,number]
+            SSID = owner():lastSaid():explode(Chat:lower()+" "):string(2)
+            print("Please enter the Passcode for "+owner():lastSaid():explode(Chat+" "):string(2))
+            timer("Passcode",100)
+            timer("Timeout",10000)
+        }
+    }
+}
+
+if(clk("Passcode")){
+    CodeSequence = 1
+}
+
+if(CodeSequence==1){
+    if(chatClk(owner())){
+        hideChat(1)
+        print(_HUD_PRINTTALK,"[Hidden] Passcode Entered: "+owner():lastSaid())
+        Passcode = owner():lastSaid()
+        dsSend("Connect","TSSWCM"+SSID,Passcode)
+    }
+    if(dsClk("Connected")){
+        if(dsGetSender():getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)==SSID & dsGetNumber()==1){
+            Connected = 1
+            print("Connected to "+SSID)
+            CodeSequence = 0
+        }elseif(dsGetSender():getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)==SSID & dsGetNumber()==0){
+            Connected = 0
+            ConnectedModem = noentity()
+            Passcode = ""
+            print("Failed to connect to "+SSID+" - Incorrect Passcode")
+            SSID = ""
+            CodeSequence = 0
+        }
+    }
+    if(dsClk("Timeout")){
+        CodeSequence = 0
+        ConnectedModem = noentity()
+        SSID = ""
+        Passcode = ""
+        print("Failed to connect to "+SSID+" - Timeout Error")
+    }
+}
+
+if(ConnectedModem==noentity() & Connected==1){
+    print("You were Disconnected from "+SSID)
+    Modems[Modems:count()+1,entity] = ConnectedModem
+    ConnectedModem = noentity()
+    SSID = ""
+    Passcode = ""
+    Connected = 0
+}
+
+if(chatClk(owner()) & Chat:lower()=="!disconnect"){
+    hideChat(1)
+    print(_HUD_PRINTTALK,"[Hidden] "+owner():lastSaid())
+    dsSendDirect("Disconnect",ConnectedModem,SSID)
+}
+
+if(dsClk("Disconnected") & dsGetSender():getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)==SSID & dsGetString()==SSID){
+    print("You were Disconnected from "+SSID)
+    Modems[Modems:count()+1,entity] = ConnectedModem
+    ConnectedModem = noentity()
+    SSID = ""
+    Passcode = ""
+    Connected = 0
+}
+
+if(Connected & chatClk(owner()) & owner():lastSaidTeam()){
+    hideChat(1)
+    dsSendDirect("ChatSend",ConnectedModem,owner():lastSaid())
+}
+
+if(Connected & dsClk("ChatReceive")){
+    Sender = dsGetString():explode("\|/"):string(1)
+    Message = dsGetString():explode("\|/"):string(2)
+    printColor(vec(255,0,255),"[",vec(0,0,255),SSID,vec(255,0,255),"] ",vec(100,100,255),Sender+": ",vec(80,80,80),Message)
+}
+
+if(dsClk("ModemStatus")){
+    ModemHack = dsGetNumber()
+}
+
+if(dsClk("HackStatus")){
+    ModemHack = 1
+    HackPercentage = dsGetNumber()
+}
+
+if(ModemHack==1){
+    EGP:egpText(11,"Hacking: "+HackPercentage:toString()+"%",vec2((Width/4)*3-150,(Height/4)+20))
+}else{EGP:egpText(11,"",vec2((Width/4)*3-150,(Height/4)+20))}
+    
+
+if(Connected==0 & chatClk(owner()) & Chat:lower()=="!hack"){
+    hideChat(1)
+    print(_HUD_PRINTTALK,"[Hidden] "+owner():lastSaid())
+    for(I=1,Modems:count()){
+        if(owner():lastSaid():explode(Chat+" "):string(2)==Modems[I,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1) & Modems[I,entity]:pos():distance(owner():pos())<=100){
+            HackID = owner():lastSaid():explode(Chat+" "):string(2)
+            HackingModem = Modems[I,entity]
+            print("Found "+HackID+". Begining Hack Protocol")
+            dsSendDirect("ModemHack",HackingModem,1)
+        }
+    }
+}
+
+if(dsClk("TimeoutError")){
+    ModemHack = 0
+    print(dsGetString()+" You gained nothing.")
+}
+
+if(dsClk("HackPay")){
+    Points = Points+dsGetNumber()
+    print(HackID+" was sucessfully hacked, you were given: "+dsGetNumber():toString()+" Points")
+    ModemHack = 0
+    HackID=""
+    HackingModem=noentity()
+}
+
+if(Connected==1 & chatClk(owner()) & Chat:lower()=="!secure"){
+    hideChat(1)
+    print(_HUD_PRINTTALK,"[Hidden] "+owner():lastSaid())
+    if(ConnectedModem:pos():distance(owner():pos())<=100){
+        dsSendDirect("ModemSecure",ConnectedModem,1)
+    }
+}
+
+if(Connected==1 & chatClk(owner()) & Chat:lower()=="!deposit"){
+    hideChat(1)
+    print(_HUD_PRINTTALK,"[Hidden] "+owner():lastSaid())
+    Deposit = owner():lastSaid():lower():explode(" "):string(2):trim()
+    if(Deposit == "*"){
+        dsSendDirect("Deposit",ConnectedModem,Points)
+        Points = Points-Points
+    }elseif(Deposit:toNumber()<=Points){
+        Points = Points-Deposit:toNumber()
+        dsSendDirect("Deposit",ConnectedModem,Deposit:toNumber())
+    }else{
+        print("Insufficient Funds to make transaction")
+    }
+}
+
+if(Connected==1 & chatClk(owner()) & Chat:lower()=="!withdrawl"){
+    hideChat(1)
+    print(_HUD_PRINTTALK,"[Hidden] "+owner():lastSaid())
+    Withdrawl = owner():lastSaid():lower():explode(" "):string(2):trim()
+    if(Withdrawl == "*"){
+        dsSendDirect("Withdrawl",ConnectedModem,Withdrawl)
+    }else{dsSendDirect("Withdrawl",ConnectedModem,Withdrawl:toNumber())}
+}
+
+if(dsClk("DepositSuccess")){
+    print("Deposit Successful")
+}
+
+if(dsClk("WithdrawlSent")){
+    Points = Points+dsGetNumber()
+}
+
+if(dsClk("WithdrawlFail")){
+    print("Insufficient Clan funds")
+}
+
+if(chatClk(owner()) & Chat:lower()=="!wifihelp"){
+    hideChat(1)
+    print("----- Wifi Clans E2 Minigame Commands Made By TheSouthernSanta -----")
+    print("!connect \"SSID\" - Starts connection process to a nearby network")
+    print("!disconnect - Disconnects you from a currently connected network")
+    print("!hack \"SSID\" - Hacks a network aslong as you are within the control field")
+    print("!deposit number/* - Deposits points into your clans reservoir whilst connected")
+    print("!withdrawl number/* - Same as above but Withdrawls")
+    print("--When connected to a network you may use teamchat to communicate on the network")
+}
+
+if(clk("PointsSync")){
+    for(I=1,ModemScan:count()){
+        dsSendDirect("PointsSync",ModemScan[I,entity],"")
+    }
+    timer("PointsSync",500)
+    UnsortedModems=array()
+    UnsortedPoints=array()
+}
+
+if(dsClk("PointsSynced")){
+    
+    UnsortedModems[UnsortedPoints:count()+1,entity]=dsGetSender()
+    UnsortedPoints[UnsortedPoints:count()+1,number]=dsGetNumber()
+    
+    UnsortedLeaderboardModems = UnsortedModems
+    UnsortedLeaderboardPoints = UnsortedPoints
+}
+
+if(clk("LeaderboardLoop")){
+    for(I=1,UnsortedLeaderboardModems:count()){
+        if(UnsortedLeaderboardPoints[I,number]<UnsortedLeaderboardPoints[I-1,number]){
+            UnsortedLeaderboardModems:pushEntity(UnsortedLeaderboardModems[I,entity])
+            UnsortedLeaderboardModems:remove(I)
+            UnsortedLeaderboardPoints:pushNumber(UnsortedLeaderboardPoints[I,number])
+            UnsortedLeaderboardPoints:remove(I)
+        }
+        if(UnsortedLeaderboardPoints[I,number]==0){
+            UnsortedLeaderboardModems:pushEntity(UnsortedLeaderboardModems[I,entity])
+            UnsortedLeaderboardModems:remove(I)
+            UnsortedLeaderboardPoints:pushNumber(UnsortedLeaderboardPoints[I,number])
+            UnsortedLeaderboardPoints:remove(I)
+        }
+    }
+    LeaderboardModems = UnsortedLeaderboardModems
+    LeaderboardPoints = UnsortedLeaderboardPoints
+    timer("LeaderboardLoop",500)
+}
