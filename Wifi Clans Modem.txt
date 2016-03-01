@@ -1,0 +1,464 @@
+@name Wifi Clans Modem
+@persist Color:vector Setup SSID:string Code:string Red Green Blue Modems:array Users:array Sender:entity HackPercent Hack Hacker:entity HackerDevice:entity Securer:string TempUsers:array Secure SecureSquad Points ClanPoints:array LeaderboardGroup:string LeaderboardModems:array LeaderboardPoints:array Config:array HackUpgrade RangeUpgrade SecureUpgrade Range RangeDef
+@model models/props_c17/consolebox03a.mdl
+
+Chat = owner():lastSaid():lower():trim()
+
+if(last()){
+    dsSend("PointRemove","WifiCModemToDevice",1)
+    for(I=1,Users:count()){
+        dsSendDirect("Disconnected",Users[I,entity],SSID)
+        dsSendDirect("ModemStatus",Users[I,entity],0)
+    }
+}
+
+if(first() | duped()){
+    dsLeaveGroup("WifiCModems")
+    runOnFile(1)
+    runOnChat(1)
+    SSID = ""
+    Code = ""
+    Color = vec(0,0,0)
+    Red = 0
+    Green = 0
+    Blue = 0
+    Setup = 1
+    Users = array()
+    TempUsers = array()
+    Points = 0
+    Hack = 0
+    HackPercent = 0
+    Secure = 0
+    SecureSquad = 0
+    SecureUpgrade = 1
+    HackUpgrade = 1
+    RangeUpgrade = 1
+    Range = 0
+    RangeDef = 2000
+    dsSetScope(2)
+    PingModems = dsProbe("WifiCModems")
+    for(I=1, PingModems:count()){
+        if(entity():pos():distance(PingModems[I,entity]:pos())<2500){
+            hint("Modem too close to another modem, move elsewhere",5000)
+            selfDestruct()
+            exit()
+        }
+    }
+    hint("Wifi Clans Modem",5000)
+    hint("This was yet another big fun project!",5000)
+    hint("To Control this modem, you must connect to it via your device e2",5000)
+    hint("Co-Created by TheSouthernSanta and Johnstart",5000)
+    timer("PlayerDetection",100)
+}
+
+if(last()){
+    Setup = 0
+    holoDeleteAll()
+    dsLeaveGroup("WifiCModems")
+    dsLeaveGroup(SSID)
+}
+
+if(clk("Setup")){
+    stoptimer("Setup")
+    Setup = Setup+1
+}
+
+if(Setup==1){
+    if(fileCanLoad()){
+        print("Fetching config file")
+        fileLoad("santase2s/wifi clans/config/ModemConfig.txt")
+        timer("FileLoaded",2000)
+    }
+}
+
+if(clk("FileLoaded")){
+    if(fileLoaded()==1){
+        print("config read successfully")
+        Config = fileRead():explode(",")
+        Setup = 2
+    }else{
+        print("config not found or error occurred - this is not bad, you just haven't saved one yet")
+        Setup = 3
+    }
+}
+
+if(Setup==2){
+    if(changed(Setup)){
+        print(_HUD_PRINTTALK,"Do you want to use saved config settings. [yes,y,no,n]")
+        #hint("Do you want to use saved config settings. [yes,y,no,n]",10000)
+    }
+    if(chatClk(owner()) & owner():lastSaid():lower():trim()=="yes" | chatClk(owner()) & owner():lastSaid():lower():trim()=="y"){
+        for(I=1, PingModems:count()){
+            if(Config[1,string]==PingModems[I,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)){
+                NameTaken = 1
+            }
+        }
+        if(NameTaken){
+            print(Config[1,string]+" was taken. Defaulting to normal setup")
+            Setup = 3
+        }else{
+            SSID = Config[1,string]
+            Code = Config[2,string]
+            Red = Config[3,string]:toNumber()
+            Green = Config[4,string]:toNumber()
+            Blue = Config[5,string]:toNumber()
+            Setup = 8
+        }
+    }elseif(chatClk(owner()) & owner():lastSaid():lower():trim()=="no" | chatClk(owner()) & owner():lastSaid():lower():trim()=="n"){
+        timer("Setup",50)
+    }
+}
+
+if(Setup==3){
+    if(changed(Setup)){
+        print(_HUD_PRINTTALK,"What is the SSID for your Wifi Modem(meaning your clan connection name)")
+        #hint("What is the SSID for your Wifi Modem(meaning your clan connection name)",10000)
+    }
+    if(chatClk(owner()) & owner():lastSaid():trim()!=""){
+        hideChat(1)
+        for(I=1, PingModems:count()){
+            if(owner():lastSaid():trim()==PingModems[I,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1)){
+                NameTaken = 1
+            }
+        }
+        if(NameTaken){
+            print(owner():lastSaid():trim()+" was taken")
+            exit()
+        }else{
+            SSID = owner():lastSaid()
+            timer("Setup",50)
+        }
+    }
+}
+if(Setup==4){
+    if(changed(Setup)){
+        print(_HUD_PRINTTALK,"What is your Wifi password?")
+        #hint("What is your Wifi password?",10000)
+    }
+    if(chatClk(owner()) & owner():lastSaid():trim()!=""){
+        hideChat(1)
+        Code = owner():lastSaid()
+        timer("Setup",50)
+    }
+}
+if(Setup==5){
+    if(changed(Setup)){
+        print(_HUD_PRINTTALK,"We want to Color your clan, please be mindful that we have no preset colors")
+        print(_HUD_PRINTTALK,"Please specify your red value from 0 to 255")
+        #hint("We want to Color your clan, please be mindful that we have no preset colors",2000)
+        #hint("Please specify your red value from 0 to 255",10000)
+    }
+    if(chatClk(owner()) & Chat:toNumber()>=0 & Chat:toNumber()<=255){
+        hideChat(1)
+        Red = Chat:toNumber()
+        timer("Setup",50)
+    }
+}
+if(Setup==6){
+    if(changed(Setup)){
+        print(_HUD_PRINTTALK,"Please specify your green value from 0 to 255")
+        #hint("Please specify your green value from 0 to 255",10000)
+    }
+    if(chatClk(owner()) & Chat:toNumber()>=0 & Chat:toNumber()<=255){
+        hideChat(1)
+        Green = Chat:toNumber()
+        timer("Setup",50)
+    }
+}
+if(Setup==7){
+    if(changed(Setup)){
+        print(_HUD_PRINTTALK,"Please specify your blue value from 0 to 255")
+        #hint("Please specify your blue value from 0 to 255",10000)
+    }
+    if(chatClk(owner()) & Chat:toNumber()>=0 & Chat:toNumber()<=255){
+        hideChat(1)
+        Blue = Chat:toNumber()
+        timer("Setup",50)
+    }
+}
+if(Setup==8){
+    print(_HUD_PRINTTALK,"Setup Complete")
+    hint("Setup Complete",10000)
+    setName("WC Modem ( "+SSID+" )")
+    Color = vec(Red,Green,Blue)
+    holoCreate(1,entity():pos())
+    holoModel(1,"icosphere2")
+    holoScale(1,vec(20,20,20))
+    holoColor(1,Color,120)
+    holoCreate(2,entity():pos())
+    holoModel(2,"icosphere2")
+    holoScale(2,vec(-20,-20,-20))
+    holoColor(2,Color,80)
+    dsJoinGroup("WifiCModems")
+    dsJoinGroup("TSSWCM"+SSID)
+    dsSetScope(2)
+    Setup = 0
+    runOnTick(1)
+    timer("ModemsSync",500)
+    print("Now hosting "+SSID+" with Password "+Code)
+    print("To retrieve Modem details again, type !details")
+    hint("Type !saveconfig to save this setup to a config file for future use",10000)
+    print("Type !saveconfig to save this setup to a config file for future use")
+    print("To do upgrades on your network type !upgrade")
+}
+
+if(Setup==0){
+holoCreate(1,entity():pos())
+holoModel(1,"icosphere2")
+holoScale(1,vec(20,20,20))
+holoColor(1,Color,120)
+holoCreate(2,entity():pos())
+holoModel(2,"icosphere2")
+holoScale(2,vec(-20,-20,-20))
+holoColor(2,Color,80)
+
+Range = RangeDef*RangeUpgrade
+}
+
+if(Setup==0 & chatClk(owner()) & owner():lastSaid():lower():explode(" "):string(1)=="!saveconfig"){
+    hideChat(1)
+    print("[Hidden]: "+owner():lastSaid())
+    fileWrite("SantasE2s/Wifi Clans/config/ModemConfig.txt",SSID+","+Code+","+Red+","+Green+","+Blue)
+    print("Config Saved(I Hope)")
+}
+
+if(Setup==0 & chatClk(owner()) & owner():lastSaid():lower():explode(" "):string(1)=="!details"){
+    hideChat(1)
+    print("[Hidden]: "+owner():lastSaid())
+    print("SSID: "+SSID+"\nPassword: "+Code)
+}
+
+if(dsClk("ModemRanges")){
+    dsSendDirect("ModemRange",dsGetSender(),Range)
+}
+
+if(dsClk("PointsSync")){
+    dsSendDirect("PointsSynced",dsGetSender(),Points)
+}
+
+if(clk("PlayerDetection")){
+    for(I=1,Users:count()){
+        dsSendDirect("ClanPoints",Users[I,entity],Points)
+        if(Users[I,entity]:owner():pos():distance(entity():pos())>2000){
+            dsSendDirect("Disconnected",Users[I,entity],SSID)
+            dsSendDirect("ModemStatus",Users[I,entity],0)
+            PlayerName = Users[I,entity]:owner():name()
+            Users:remove(I)
+            for(C=1,Users:count()){
+                dsSendDirect("ChatReceive",Users[C,entity],"MODEM"+"\|/"+PlayerName+" left the network.")
+            }
+        }
+    }
+    timer("PlayerDetection",100)
+}
+
+if(dsClk("Disconnect")){
+    Player = dsGetSender()
+    for(I=1,Users:count()){
+        if(Users[I,entity] == Player & dsGetString()==SSID){
+            dsSendDirect("Disconnected",Users[I,entity],SSID)
+            dsSendDirect("ModemStatus",Users[I,entity],0)
+            PlayerName = Users[I,entity]:owner():name()
+            Users:remove(I)
+            for(C=1,Users:count()){
+                dsSendDirect("ChatReceive",Users[C,entity],"MODEM"+"\|/"+PlayerName+" left the network.")
+            }
+        }
+    }
+}
+
+if(dsClk("Connect")){
+    Sender = dsGetSender()
+    if(dsGetString()==Code){
+        dsSendDirect("Connected",Sender,1)
+        for(C=1,Users:count()){
+            dsSendDirect("ChatReceive",Users[C,entity],"MODEM"+"\|/"+Sender:owner():name()+" joined the network.")
+        }
+        if(HackPercent!=0){
+            dsSendDirect("ModemStatus",Sender,1)
+            dsSendDirect("HackStatus",Sender,HackPercent)
+        }
+        dsSendDirect("LeaderboardModem1",Sender,LeaderboardModems[1,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1))
+        dsSendDirect("LeaderboardModem2",Sender,LeaderboardModems[2,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1))
+        dsSendDirect("LeaderboardModem3",Sender,LeaderboardModems[3,entity]:getName():explode("WC Modem ( "):string(2):explode(" )"):string(1))
+        dsSendDirect("LeaderboardPoints1",Sender,LeaderboardPoints[1,number])
+        dsSendDirect("LeaderboardPoints2",Sender,LeaderboardPoints[2,number])
+        dsSendDirect("LeaderboardPoints3",Sender,LeaderboardPoints[3,number])
+        Users[Users:count()+1,entity] = Sender
+    }else{dsSendDirect("Connected",Sender,0)}
+}
+
+if(dsClk("ChatSend")){
+    ChatSender = dsGetSender():owner():name()
+    ChatMessage = dsGetString()
+    for(I=1,Users:count()){
+        dsSendDirect("ChatReceive",Users[I,entity],ChatSender+"\|/"+ChatMessage)
+    }
+}
+
+if(dsClk("ModemHack") & Hack==0){
+    Secure = 0
+    Hack = dsGetNumber()
+    Hacker = dsGetSender():owner()
+    HackerDevice = dsGetSender()
+    dsSendDirect("ModemStatus",HackerDevice,1)
+    for(I=1,Users:count()){
+        dsSendDirect("ModemStatus",Users[I,entity],1)
+        dsSendDirect("ChatReceive",Users[I,entity],"MODEM"+"\|/"+Hacker:name()+" is hacking the network.")
+    }
+    timer("Hack",100)
+}
+
+if(Hack){
+    if(clk("Hack") & Hacker:pos():distance(entity():pos())<100 & Hacker:isAlive()){
+        stoptimer("HackTimeout")
+        HackPercent = HackPercent+(1/HackUpgrade)
+        dsSendDirect("HackStatus",HackerDevice,HackPercent)
+        for(I=1,Users:count()){
+            dsSendDirect("HackStatus",Users[I,entity],HackPercent)
+        }
+        timer("Hack",100)
+    }else{
+        timer("HackTimeout",10000)
+        timer("Hack",100)
+    }
+    
+    if(clk("HackTimeout")){
+        for(I=1,Users:count()){
+            dsSendDirect("ChatReceive",Users[I,entity],"MODEM"+"\|/"+Hacker:name()+" timed out, the network is safe enough to secure.")
+        }
+        dsSendDirect("TimeoutError",HackerDevice,"Your device was throttled, You were timed out.")
+        dsSendDirect("ModemStatus",HackerDevice,0)
+        Hacker = noentity()
+        HackerDevice = noentity()
+        Hack = 0
+    }
+    
+    if(HackPercent==100){
+        stoptimer("Hack")
+        for(I=1,Users:count()){
+            dsSendDirect("ChatReceive",Users[I,entity],"MODEM"+"\|/"+Hacker:name()+" has hacked the network, the network has been shut down.")
+        }
+        if((Points/2)<100){
+            dsSendDirect("HackPay",HackerDevice,100)
+            Hacker = noentity()
+            HackerDevice = noentity()
+        }else{
+            dsSendDirect("HackPay",HackerDevice,Points/2)
+            Hacker = noentity()
+            HackerDevice = noentity()
+        }
+        timer("Destroy",500)
+    }
+}
+
+if(clk("Destroy")){
+    for(I=1,Modems:count()){
+        dsSendDirect("PointRemove",Modems[I,entity],1)
+    }
+    selfDestruct()
+}
+
+if(dsClk("ModemSecure") & Hack==0 & Secure==0 & HackPercent!=0){
+    Secure = dsGetNumber()
+    Securer = dsGetSender():owner():name()
+    for(I=1,Users:count()){
+        dsSendDirect("ChatReceive",Users[I,entity],"MODEM"+"\|/"+Securer+" Began to secure the network, others may help speed it up.")
+        dsSendDirect("ModemStatus",Users[I,entity],1)
+    }
+    timer("Secure",100)
+}
+
+if(Secure){
+    if(findCanQuery()){
+        for(I=1,Users:count()){
+            TempUsers[I,entity] = Users[I,entity]:owner()
+            if(TempUsers[I,entity]:pos():distance(entity():pos())>100){
+                TempUsers:remove(I)
+            }
+        }
+        SecureSquad = TempUsers:count()
+    }    
+    if(clk("Secure") & SecureSquad){
+        stoptimer("SecureTimeout")
+        HackPercent = HackPercent-(SecureSquad*SecureUpgrade)
+        for(I=1,Users:count()){
+            dsSendDirect("HackStatus",Users[I,entity],HackPercent)
+        }
+        timer("Secure",500)
+    }else{
+        timer("SecureTimeout",10000)
+        timer("Secure",500)
+    }
+    
+    if(clk("SecureTimeout")){
+        stoptimer("SecureTimeout")
+        for(I=1,Users:count()){
+            dsSendDirect("ChatReceive",Users[I,entity],"MODEM"+"\|/"+"The securing protocol timed out.")
+        }
+        Secure = 0
+    }
+    
+    if(HackPercent==0){
+        for(I=1,Users:count()){
+            dsSendDirect("ChatReceive",Users[I,entity],"MODEM"+"\|/"+"The network has been secured.")
+            dsSendDirect("ModemStatus",Users[I,entity],0)
+        }
+        Secure = 0
+    }
+}
+    
+if(dsClk("Deposit")){
+    Points = Points+dsGetNumber()
+    dsSendDirect("DepositSuccess",dsGetSender(),1)
+}
+
+if(dsClk("Withdrawl")){
+    Begger = dsGetSender()
+    if(dsGetType()=="String" & dsGetString()=="*"){
+        WPoints = Points
+    }else{WPoints = dsGetNumber()}
+    if(WPoints<=Points){
+        Points = Points-WPoints
+        dsSendDirect("WithdrawlSent",Begger,WPoints)
+    }else{dsSendDirect("WithdrawlFail",Begger,0)}
+}
+
+if(Setup==0 & chatClk(owner()) & owner():lastSaid():lower():explode(" "):string(1)=="!upgrade"){
+    hideChat(1)
+    print("[Hidden]: "+owner():lastSaid())
+        if(owner():lastSaid():lower():explode(" "):string(2)=="range"){
+            Cost = 500+((500*0.75)*RangeUpgrade-1)
+            if(owner():lastSaid():lower():explode(" "):string(3)=="buy"){
+                if(Points >= Cost){
+                    Points = Points - Cost
+                    RangeUpgrade = RangeUpgrade+1
+                }
+            }else{
+                print("Range: "+(RangeUpgrade-1)+"\nUpgrade Cost: "+Cost+"\ntype \"!upgrade range buy\" to purchase")
+            }
+        }elseif(owner():lastSaid():lower():explode(" "):string(2)=="secure"){
+            Cost = 800+((800*0.75)*SecureUpgrade-1)
+            if(owner():lastSaid():lower():explode(" "):string(3)=="buy"){
+                if(Points >= Cost){
+                    Points = Points - Cost
+                    SecureUpgrade = SecureUpgrade+1
+                }
+            }else{
+                print("Range: "+(SecureUpgrade-1)+"\nUpgrade Cost: "+Cost+"\ntype \"!upgrade secure buy\" to purchase")
+            }
+        }elseif(owner():lastSaid():lower():explode(" "):string(2)=="hack"){
+            Cost = 650+((650*0.75)*HackUpgrade-1)
+            if(owner():lastSaid():lower():explode(" "):string(3)=="buy"){
+                if(Points >= Cost){
+                    Points = Points - Cost
+                    HackUpgrade = HackUpgrade+1
+                }
+            }else{
+                print("Delayed Hacker Upgrade: "+(HackUpgrade-1)+"\nUpgrade Cost: "+Cost+"\ntype \"!upgrade hack buy\" to purchase")
+            }
+        }else{
+        print("Upgrade Commands \n!upgrade range \nUpgrades your modem range throwing off players and allowing you more space to use your abilities \n!upgrade secure \nUpgrades the speed of which you can reverse the hacking process")
+        print("!upgrade hack \nUpgrades the delay the speed of which hackers hack your network")
+    }
+}
